@@ -1,0 +1,111 @@
+module eight_bit_comprator (a,b,l,g,e);
+
+    input [0:7]a;
+    input [0:7]b;
+    //output l_out,g_out,e_out; // final output
+    //wire l_out,g_out,e_out;
+    output [0:8]l;
+    output [0:8]g;
+    output [0:8]e;
+   //extra wire l,g,e to store value for each bit
+   wire [0:8]l;
+   wire [0:8]g;
+   wire [0:8]e;
+
+   assign l[8] = 0;
+   assign g[8] = 0;
+   assign e[8] = 1;
+   /* most significant bit is compared; taking initial
+   values as equal(en1=1) so that it's normaly compared
+   Later the result of this will be passed on to next most
+   significant bit */
+
+   one_bit_comprator FA7 (a [7],b [7],l [8],g [8],e [8],l [7],g [7],e [7]);
+   one_bit_comprator FA6 (a [6],b [6],l [7],g [7],e [7],l [6],g [6],e [6]);
+   one_bit_comprator FA5 (a [5],b [5],l [6],g [6],e [6],l [5],g [5],e [5]);
+   one_bit_comprator FA4 (a [4],b [4],l [5],g [5],e [5],l [4],g [4],e [4]);
+   one_bit_comprator FA3 (a [3],b [3],l [4],g [4],e [4],l [3],g [3],e [3]);
+   one_bit_comprator FA2 (a [2],b [2],l [3],g [3],e [3],l [2],g [2],e [2]);
+   one_bit_comprator FA1 (a [1],b [1],l [2],g [2],e [2],l [1],g [1],e [1]);
+   one_bit_comprator FA0 (a [0],b [0],l [1],g [1],e [1],l[0],g[0],e[0]);
+
+   /* the value l[0],g[0],e[0] contains the final comparison
+   result after each bit*/
+  // assign l_out = l[0];
+  // assign g_out = g[0];
+  // assign e_out = e[0];
+
+endmodule
+
+
+
+
+
+
+module eight_bit_comprator_top;
+
+   reg [7:0] A;
+   reg [7:0] B;
+
+   wire [0:8]l_out;
+   wire [0:8]g_out;
+   wire [0:8]e_out;
+
+   eight_bit_comprator COMPARE (A, B, l_out, g_out, e_out);
+
+   always @ (A or B) begin
+        #10
+        $display("<%d> : A = %b,B = %b, less = %b , equal = %b, greater = %b \n",$time,A,B,l_out,e_out,g_out);
+   end
+
+   initial
+      begin
+      #80
+      $finish;
+   end
+
+   initial begin
+      #5
+      A = 0; B = 0;
+      #5
+      A = 128; B =127;
+      #5
+      A =31; B =32;
+      #5
+      A =255; B =0;
+      #5
+      A =2; B =1;
+    end
+
+endmodule
+
+
+
+
+module one_bit_comprator (an,bn,ln1,gn1,en1,ln,gn,en);
+    /* _n represents n th bit and _n1 represents  n+1 th bit */
+    input an;
+    input bn;
+    input ln1;
+    input gn1;
+    input en1;
+
+    output ln;
+    wire ln;
+    output gn;
+    wire gn;
+    output en;
+    wire en;
+
+    /*to remove using if...else, decuced ln, gn , en;
+    directly in terms of other inputs */
+    /* if previous value gives ln1=1 or gn1=1 that is directly
+    passed to ln or gn resp. while other part is used if en1=1*/
+    always @ (an or bn) begin
+      $display("<%d> :  a= %b,b = %b,prv less = %b , prv equal = %b,prv  greater = %b \n",$time,an,bn,ln1,en1,gn1);
+    assign ln = (en1&(~an)&bn)|ln1;
+    assign gn = (en1&an&(~bn))|gn1;
+    assign en = en1&(an^bn);
+    $display("<%d> :  a= %b,b = %b, curr less = %b ,curr equal = %b, curr greater = %b \n",$time,an,bn,ln,en,gn);
+    end
+endmodule
